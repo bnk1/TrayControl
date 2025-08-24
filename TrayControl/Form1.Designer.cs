@@ -29,10 +29,9 @@
         private void InitializeComponent()
         {
             BtnList = new Button();
-            TxtQuery = new TextBox();
             HideBtn = new Button();
-            IconsList = new ListBox();
             ShowBtn = new Button();
+            IconsList = new ListView();
             SuspendLayout();
             // 
             // BtnList
@@ -43,13 +42,7 @@
             BtnList.TabIndex = 0;
             BtnList.Text = "List";
             BtnList.UseVisualStyleBackColor = true;
-            // 
-            // TxtQuery
-            // 
-            TxtQuery.Location = new Point(298, 37);
-            TxtQuery.Name = "TxtQuery";
-            TxtQuery.Size = new Size(586, 35);
-            TxtQuery.TabIndex = 1;
+            BtnList.Click += BtnList_Click;
             // 
             // HideBtn
             // 
@@ -59,16 +52,6 @@
             HideBtn.TabIndex = 2;
             HideBtn.Text = "Hide";
             HideBtn.UseVisualStyleBackColor = true;
-            HideBtn.Click += HideBtn_Click;
-            // 
-            // IconsList
-            // 
-            IconsList.FormattingEnabled = true;
-            IconsList.ItemHeight = 30;
-            IconsList.Location = new Point(298, 87);
-            IconsList.Name = "IconsList";
-            IconsList.Size = new Size(586, 484);
-            IconsList.TabIndex = 3;
             // 
             // ShowBtn
             // 
@@ -78,30 +61,33 @@
             ShowBtn.TabIndex = 4;
             ShowBtn.Text = "Show";
             ShowBtn.UseVisualStyleBackColor = true;
-            ShowBtn.Click += ShowBtn_Click;
+            // 
+            // IconsList
+            // 
+            IconsList.Location = new Point(224, 37);
+            IconsList.Name = "IconsList";
+            IconsList.Size = new Size(1436, 652);
+            IconsList.TabIndex = 5;
+            IconsList.UseCompatibleStateImageBehavior = false;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1095, 724);
-            Controls.Add(ShowBtn);
+            ClientSize = new Size(1701, 724);
             Controls.Add(IconsList);
+            Controls.Add(ShowBtn);
             Controls.Add(HideBtn);
-            Controls.Add(TxtQuery);
             Controls.Add(BtnList);
             Name = "Form1";
-            Text = "Form1";
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
 
         private Button BtnList;
-        private TextBox TxtQuery;
         private Button HideBtn;
-        private ListBox IconsList;
         private Button ShowBtn;
+        private ListView IconsList;
     }
 }
