@@ -18,6 +18,9 @@ namespace TrayControl
             HideBtn.Click += (s, e) => ActOnChecked(show: false);
         }
 
+        private const int IconWidth = 64;
+        private const int IconHeight = 64;
+
         // at the top of Form1
         private List<TrayIconInfo> _icons = new();
         private ImageList _smallImages = new();
@@ -41,7 +44,7 @@ namespace TrayControl
             IconsList.Columns.Add("Text", 400);
 
             // Prepare the SmallImageList *before* adding items
-            _smallImages = new ImageList { ImageSize = new Size(16, 16), ColorDepth = ColorDepth.Depth32Bit };
+            _smallImages = new ImageList { ImageSize = new Size(IconWidth, IconHeight), ColorDepth = ColorDepth.Depth32Bit };
             IconsList.SmallImageList = _smallImages;
 
             // (optional) owner draw OFF
@@ -50,7 +53,7 @@ namespace TrayControl
 
         private void RefreshIconsList()
         {
-            _icons = TrayInterop.ListTrayIcons();
+            _icons = TrayInterop.ListTrayIcons(IconWidth, IconHeight);
 
             // Rebuild imagelist first
             _smallImages.Images.Clear();

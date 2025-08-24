@@ -64,9 +64,10 @@
             // 
             // IconsList
             // 
+            IconsList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             IconsList.Location = new Point(224, 37);
             IconsList.Name = "IconsList";
-            IconsList.Size = new Size(1436, 652);
+            IconsList.Size = new Size(1464, 939);
             IconsList.TabIndex = 5;
             IconsList.UseCompatibleStateImageBehavior = false;
             // 
@@ -74,7 +75,7 @@
             // 
             AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1701, 724);
+            ClientSize = new Size(1729, 1011);
             Controls.Add(IconsList);
             Controls.Add(ShowBtn);
             Controls.Add(HideBtn);
