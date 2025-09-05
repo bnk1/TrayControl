@@ -81,14 +81,14 @@
             // 
             // IconsList
             // 
-            IconsList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             IconsList.BorderStyle = BorderStyle.None;
             IconsList.CheckBoxes = true;
             IconsList.Columns.AddRange(new ColumnHeader[] { App, AppName, AppPath });
+            IconsList.Dock = DockStyle.Fill;
             IconsList.FullRowSelect = true;
             IconsList.Location = new Point(146, 3);
             IconsList.Name = "IconsList";
-            IconsList.Size = new Size(1940, 739);
+            IconsList.Size = new Size(1817, 739);
             IconsList.TabIndex = 7;
             IconsList.UseCompatibleStateImageBehavior = false;
             IconsList.ItemChecked += IconsList_ItemChecked;
