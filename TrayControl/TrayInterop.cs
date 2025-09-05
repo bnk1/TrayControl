@@ -1,51 +1,54 @@
-﻿using System;
+﻿//#nullable disable
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using Windows.ApplicationModel.Activation;
+using System.Text;
 
 namespace TrayControl
 {
-    public enum TrayArea
-    {
-        NotificationArea,
-        OverflowArea
-    }
+    public enum TrayArea { NotificationArea, OverflowArea }
 
     public class TrayIconInfo
     {
         public TrayArea Area { get; set; }
         public int IdCommand { get; set; }
-        public string Text { get; set; } = string.Empty; // never null
-        public Image? Icon { get; set; }                 // may be null
+        public string Text { get; set; } = string.Empty;
+
+        public Image? AppIcon { get; set; }   // program EXE icon
+        public Image? TrayIcon { get; set; }  // captured tray bitmap
+        public string? AppPath { get; set; }  // exe path if resolved
     }
 
     public static class TrayInterop
     {
-        // ==== Toolbar messages (WM_USER + n) ====
-        private const int TB_HIDEBUTTON            = 0x0404; // +4
-        private const int TB_GETBUTTON             = 0x0417; // +23
-        private const int TB_BUTTONCOUNT           = 0x0418; // +24
-        private const int TB_GETBUTTONTEXTW        = 0x044B; // +75
-        private const int TB_GETIMAGELIST          = 0x0431; // +49  (correct)
-        private const int TB_GETHOTIMAGELIST       = 0x0435; // +53  (fallback)
-        private const int TB_GETDISABLEDIMAGELIST  = 0x0437; // +55  (fallback)
-        private const int TB_GETRECT               = 0x0433; // +51  (RECT for idCommand; client coords)
+        // ===== Toolbar messages (WM_USER + n) =====
+        private const int TB_HIDEBUTTON            = 0x0404;
+        private const int TB_GETBUTTON             = 0x0417;
+        private const int TB_BUTTONCOUNT           = 0x0418;
+        private const int TB_GETBUTTONTEXTW        = 0x044B;
+        private const int TB_GETIMAGELIST          = 0x0431;
+        private const int TB_GETHOTIMAGELIST       = 0x0435;
+        private const int TB_GETDISABLEDIMAGELIST  = 0x0437;
+        private const int TB_GETRECT               = 0x0433;
 
-        // ==== ImageList flags ====
-        private const int ILD_NORMAL               = 0x0000;
+        // Button style/state bits
+        private const byte TBSTYLE_SEP    = 0x01;
+        private const byte TBSTATE_HIDDEN = 0x08;
 
-        // ==== Process memory flags ====
-        private const uint PROCESS_VM_READ           = 0x0010;
-        private const uint PROCESS_VM_OPERATION      = 0x0008;
-        private const uint PROCESS_QUERY_INFORMATION = 0x0400;
-        private const uint MEM_COMMIT                = 0x1000;
-        private const uint MEM_RESERVE               = 0x2000;
-        private const uint PAGE_READWRITE            = 0x04;
-        private const uint MEM_RELEASE               = 0x8000;
+        // ImageList flags
+        private const int ILD_NORMAL = 0x0000;
 
-        // ==== PrintWindow flags ====
-        private const uint PW_CLIENTONLY             = 0x00000001;
+        // Process access/memory
+        private const uint PROCESS_VM_READ                   = 0x0010;
+        private const uint PROCESS_VM_OPERATION              = 0x0008;
+        private const uint PROCESS_QUERY_INFORMATION         = 0x0400;
+        private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+        private const uint MEM_COMMIT   = 0x1000;
+        private const uint MEM_RESERVE  = 0x2000;
+        private const uint PAGE_READWRITE = 0x04;
+        private const uint MEM_RELEASE  = 0x8000;
 
         [StructLayout(LayoutKind.Sequential)]
         private struct TBBUTTON
@@ -54,30 +57,47 @@ namespace TrayControl
             public int idCommand;
             public byte fsState;
             public byte fsStyle;
-            public byte bReserved0; // padding x64
-            public byte bReserved1; // padding x64
-            public IntPtr dwData;   // explorer.exe pointer
-            public IntPtr iString;  // explorer.exe pointer
+            public byte bReserved0; // x64 padding
+            public byte bReserved1; // x64 padding
+            public IntPtr dwData;   // pointer to per-item data in explorer
+            public IntPtr iString;  // pointer or index to text
         }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct RECT
         {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
-
-            public int Width => right - left;
-            public int Height => bottom - top;
+            public int left, top, right, bottom;
+            public int Width { get { return right - left; } }
+            public int Height { get { return bottom - top; } }
         }
 
-        // ===== P/Invokes =====
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ICONINFO
+        {
+            public bool fIcon;
+            public int xHotspot;
+            public int yHotspot;
+            public IntPtr hbmMask;
+            public IntPtr hbmColor;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct BITMAP
+        {
+            public int bmType, bmWidth, bmHeight, bmWidthBytes;
+            public ushort bmPlanes, bmBitsPixel;
+            public IntPtr bmBits;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT { public int X; public int Y; }
+
+        // ===== P/Invoke =====
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr FindWindow(string? lpClassName, string? lpWindowName);
+        private static extern IntPtr FindWindow(string lpClassName, string? lpWindowName);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string? className, string? windowName);
+        private static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string lpClassName, string? lpWindowName);
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
@@ -100,6 +120,9 @@ namespace TrayControl
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool CloseHandle(IntPtr hObject);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
         [DllImport("comctl32.dll", SetLastError = false)]
         private static extern IntPtr ImageList_GetIcon(IntPtr himl, int i, int flags);
 
@@ -107,13 +130,24 @@ namespace TrayControl
         private static extern bool DestroyIcon(IntPtr hIcon);
 
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, uint nFlags);
+        private static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        private static extern int GetObject(IntPtr h, int c, out BITMAP pv);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        private static extern bool DeleteObject(IntPtr hObject);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool QueryFullProcessImageName(IntPtr hProcess, int flags, StringBuilder exePath, ref int size);
 
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+        private static extern bool IsWindow(IntPtr hWnd);
+
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        private static extern uint ExtractIconEx(string lpszFile, int nIconIndex, out IntPtr phiconLarge, out IntPtr phiconSmall, uint nIcons);
 
         // ===== Public API =====
-
         public static List<TrayIconInfo> ListTrayIcons(int iconWidth, int iconHeight)
         {
             var list = new List<TrayIconInfo>();
@@ -130,20 +164,15 @@ namespace TrayControl
             return list;
         }
 
-        public static bool HideIcon(int idCommand, TrayArea area)
-            => SetHidden(GetToolbar(area), idCommand, hide: true);
+        public static bool HideIcon(int idCommand, TrayArea area) => SetHidden(GetToolbar(area), idCommand, true);
+        public static bool ShowIcon(int idCommand, TrayArea area) => SetHidden(GetToolbar(area), idCommand, false);
 
-        public static bool ShowIcon(int idCommand, TrayArea area)
-            => SetHidden(GetToolbar(area), idCommand, hide: false);
-
-        // ===== Private helpers =====
-
-        private static IntPtr GetToolbar(TrayArea area)
-            => area == TrayArea.NotificationArea ? GetLiveTrayToolbar() : GetOverflowToolbar();
+        // ===== Internals =====
+        private static IntPtr GetToolbar(TrayArea area) =>
+            area == TrayArea.NotificationArea ? GetLiveTrayToolbar() : GetOverflowToolbar();
 
         private static IntPtr GetLiveTrayToolbar()
         {
-            // Shell_TrayWnd → TrayNotifyWnd → SysPager → ToolbarWindow32
             IntPtr tray = FindWindow("Shell_TrayWnd", null);
             if (tray == IntPtr.Zero)
                 return IntPtr.Zero;
@@ -161,23 +190,19 @@ namespace TrayControl
 
         private static IntPtr GetOverflowToolbar()
         {
-            // NotifyIconOverflowWindow → ToolbarWindow32
             IntPtr overflowWin = FindWindow("NotifyIconOverflowWindow", null);
             if (overflowWin == IntPtr.Zero)
                 return IntPtr.Zero;
-
             return FindWindowEx(overflowWin, IntPtr.Zero, "ToolbarWindow32", null);
         }
 
-        private static void ForEachButton(IntPtr toolbar, TrayArea area, List<TrayIconInfo> results, int iconWidth, int iconHeight)
+        private static void ForEachButton(IntPtr toolbar, TrayArea area, List<TrayIconInfo> results, int iconW, int iconH)
         {
             if (toolbar == IntPtr.Zero)
                 return;
 
-            uint pid;
-            GetWindowThreadProcessId(toolbar, out pid);
-
-            IntPtr hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, false, pid);
+            GetWindowThreadProcessId(toolbar, out uint pidExplorer);
+            IntPtr hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, false, pidExplorer);
             if (hProc == IntPtr.Zero)
                 return;
 
@@ -187,46 +212,57 @@ namespace TrayControl
                 if (count <= 0)
                     return;
 
-                int btnSize = Marshal.SizeOf(typeof(TBBUTTON));
+                int btnSize = Marshal.SizeOf<TBBUTTON>();
                 IntPtr remoteBtn = VirtualAllocEx(hProc, IntPtr.Zero, (IntPtr)btnSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
                 if (remoteBtn == IntPtr.Zero)
                     return;
-
-                IntPtr himl = GetToolbarImageList(toolbar);
 
                 try
                 {
                     for (int i = 0; i < count; i++)
                     {
-                        // Request TBBUTTON[i] be written into explorer’s memory we provided
                         SendMessage(toolbar, TB_GETBUTTON, (IntPtr)i, remoteBtn);
 
-                        // Copy structure back into our process
                         IntPtr local = Marshal.AllocHGlobal(btnSize);
                         try
                         {
-                            IntPtr bytesRead;
-                            ReadProcessMemory(hProc, remoteBtn, local, (IntPtr)btnSize, out bytesRead);
-
+                            ReadProcessMemory(hProc, remoteBtn, local, (IntPtr)btnSize, out _);
                             TBBUTTON btn = Marshal.PtrToStructure<TBBUTTON>(local);
+
+                            if ((btn.fsStyle & TBSTYLE_SEP) == TBSTYLE_SEP)
+                                continue;
+                            if ((btn.fsState & TBSTATE_HIDDEN) == TBSTATE_HIDDEN)
+                                continue;
 
                             string text = GetButtonTextCrossProc(toolbar, btn.idCommand, hProc);
 
-                            // Try imagelist first
-                            Image? icon = GetButtonIcon(himl, btn.iBitmap);
-
-                            // Fallback: capture the button rect from a PrintWindow of the toolbar
-                            if (icon == null)
+                            // Resolve owner -> EXE path -> extract program icon
+                            string? appPath = null;
+                            Image? appIcon = null;
+                            if (TryGetOwnerHwndFromDwData(hProc, btn.dwData, out var owner) && owner != IntPtr.Zero && IsWindow(owner))
                             {
-                                icon = CaptureButtonIcon(toolbar, hProc, btn.idCommand, iconWidth, iconHeight);
+                                GetWindowThreadProcessId(owner, out uint ownerPid);
+                                appPath = GetProcessPath(ownerPid);
+                                if (!string.IsNullOrEmpty(appPath))
+                                    appIcon = GetExeIconCanvas(appPath!, iconW, iconH);
+                            }
+
+                            // Tray bitmap via what-you-see screen capture (button INDEX)
+                            Image? trayBmp = CaptureButtonIconFromScreen(toolbar, hProc, i, iconW, iconH, Color.White);
+                            if (trayBmp == null)
+                            {
+                                IntPtr himl = GetToolbarImageList(toolbar);
+                                trayBmp = GetButtonIcon(himl, btn.iBitmap, iconW, iconH);
                             }
 
                             results.Add(new TrayIconInfo
                             {
                                 Area = area,
                                 IdCommand = btn.idCommand,
-                                Text = text ?? string.Empty,
-                                Icon = icon
+                                Text = text,
+                                AppIcon = appIcon,
+                                TrayIcon = trayBmp,
+                                AppPath = appPath
                             });
                         }
                         finally
@@ -251,32 +287,10 @@ namespace TrayControl
             IntPtr himl = SendMessage(toolbar, TB_GETIMAGELIST, IntPtr.Zero, IntPtr.Zero);
             if (himl != IntPtr.Zero)
                 return himl;
-
             himl = SendMessage(toolbar, TB_GETHOTIMAGELIST, IntPtr.Zero, IntPtr.Zero);
             if (himl != IntPtr.Zero)
                 return himl;
-
             return SendMessage(toolbar, TB_GETDISABLEDIMAGELIST, IntPtr.Zero, IntPtr.Zero);
-        }
-
-        private static Image? GetButtonIcon(IntPtr himl, int index)
-        {
-            if (himl == IntPtr.Zero || index < 0)
-                return null;
-
-            IntPtr hIcon = ImageList_GetIcon(himl, index, ILD_NORMAL);
-            if (hIcon == IntPtr.Zero)
-                return null;
-
-            try
-            {
-                using (var ico = Icon.FromHandle(hIcon))
-                    return (Image)ico.ToBitmap().Clone(); // clone so we can destroy handle
-            }
-            finally
-            {
-                DestroyIcon(hIcon);
-            }
         }
 
         private static bool SetHidden(IntPtr toolbar, int idCommand, bool hide)
@@ -287,9 +301,9 @@ namespace TrayControl
             return res != IntPtr.Zero;
         }
 
+        // ---- Cross-process text (TB_GETBUTTONTEXTW) ----
         private static string GetButtonTextCrossProc(IntPtr toolbar, int idCommand, IntPtr hProc)
         {
-            // Allocate text buffer in explorer.exe, ask TB_GETBUTTONTEXTW to fill it, then copy back
             const int MaxChars = 512;
             int bytes = MaxChars * 2; // UTF-16
 
@@ -304,12 +318,14 @@ namespace TrayControl
                 if (res.ToInt64() < 0)
                     return string.Empty;
 
-                IntPtr read;
-                if (!ReadProcessMemory(hProc, remoteBuf, localBuf, (IntPtr)bytes, out read))
+                if (!ReadProcessMemory(hProc, remoteBuf, localBuf, (IntPtr)bytes, out _))
                     return string.Empty;
 
-                string s = Marshal.PtrToStringUni(localBuf) ?? string.Empty;
-                return TrimAtNull(s);
+                string? s = Marshal.PtrToStringUni(localBuf);
+                if (string.IsNullOrEmpty(s))
+                    return string.Empty;
+                int z = s.IndexOf('\0');
+                return z >= 0 ? s.Substring(0, z) : s;
             }
             finally
             {
@@ -318,27 +334,23 @@ namespace TrayControl
             }
         }
 
-        // ---- Fallback: capture icon by printing toolbar and cropping button rect ----
-
-        private static Image? CaptureButtonIcon(IntPtr toolbar, IntPtr hProc, int idCommand, int iconWidth, int iconHeight)
+        // ---- Capture the button rectangle from screen (by button INDEX) ----
+        private static Image? CaptureButtonIconFromScreen(IntPtr toolbar, IntPtr hProc, int buttonIndex, int canvasW, int canvasH, Color back)
         {
-            // 1) Get button rect in client coordinates (cross-process TB_GETRECT)
-            int rectSize = Marshal.SizeOf(typeof(RECT));
+            int rectSize = Marshal.SizeOf<RECT>();
             IntPtr remoteRect = VirtualAllocEx(hProc, IntPtr.Zero, (IntPtr)rectSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
             if (remoteRect == IntPtr.Zero)
                 return null;
 
-            RECT rect;
+            RECT r;
             IntPtr localRect = Marshal.AllocHGlobal(rectSize);
             try
             {
-                SendMessage(toolbar, TB_GETRECT, (IntPtr)idCommand, remoteRect);
-
-                IntPtr read;
-                if (!ReadProcessMemory(hProc, remoteRect, localRect, (IntPtr)rectSize, out read))
+                SendMessage(toolbar, TB_GETRECT, (IntPtr)buttonIndex, remoteRect);
+                if (!ReadProcessMemory(hProc, remoteRect, localRect, (IntPtr)rectSize, out _))
                     return null;
 
-                rect = Marshal.PtrToStructure<RECT>(localRect);
+                r = Marshal.PtrToStructure<RECT>(localRect);
             }
             finally
             {
@@ -346,66 +358,186 @@ namespace TrayControl
                 VirtualFreeEx(hProc, remoteRect, IntPtr.Zero, MEM_RELEASE);
             }
 
-            if (rect.Width <= 0 || rect.Height <= 0)
+            if (r.Width <= 0 || r.Height <= 0)
                 return null;
 
-            // 2) Print the toolbar's client area to a bitmap
-            if (!GetClientRect(toolbar, out RECT client))
+            // client -> screen
+            POINT tl = new POINT { X = r.left, Y = r.top };
+            POINT br = new POINT { X = r.right, Y = r.bottom };
+            if (!ClientToScreen(toolbar, ref tl) || !ClientToScreen(toolbar, ref br))
                 return null;
 
-            int w = Math.Max(client.Width, rect.right);   // be generous
-            int h = Math.Max(client.Height, rect.bottom);
+            int w = Math.Max(1, br.X - tl.X);
+            int h = Math.Max(1, br.Y - tl.Y);
 
-            if (w <= 0 || h <= 0)
-                return null;
-
-            using (var bmp = new Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+            using (var src = new Bitmap(w, h, PixelFormat.Format32bppArgb))
             {
-                using (var g = Graphics.FromImage(bmp))
+                using (Graphics g = Graphics.FromImage(src))
                 {
-                    IntPtr hdc = g.GetHdc();
                     try
-                    {
-                        // PW_CLIENTONLY prints the client area (no border)
-                        if (!PrintWindow(toolbar, hdc, PW_CLIENTONLY))
-                            return null;
-                    }
-                    finally
-                    {
-                        g.ReleaseHdc(hdc);
-                    }
+                    { g.CopyFromScreen(tl.X, tl.Y, 0, 0, new Size(w, h)); }
+                    catch { return null; }
                 }
-
-                // 3) Crop to button rect, clamp inside bitmap
-                int x = Math.Max(0, rect.left);
-                int y = Math.Max(0, rect.top);
-                int rw = Math.Min(rect.Width,  bmp.Width  - x);
-                int rh = Math.Min(rect.Height, bmp.Height - y);
-                if (rw <= 0 || rh <= 0)
-                    return null;
-
-                Rectangle crop = new Rectangle(x, y, rw, rh);
-                using (var cropped = bmp.Clone(crop, bmp.PixelFormat))
-                {
-                    // 4) Resize to 16x16
-                    var outBmp = new Bitmap(iconWidth, iconHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                    using (var gg = Graphics.FromImage(outBmp))
-                    {
-                        gg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                        gg.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                        gg.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                        gg.DrawImage(cropped, new Rectangle(0, 0, iconWidth, iconHeight));
-                    }
-                    return outBmp;
-                }
+                return FitIntoCanvasNoUpscale(src, canvasW, canvasH, back);
             }
         }
 
-        private static string TrimAtNull(string s)
+        // ---- Imagelist fallback ----
+        private static Image? GetButtonIcon(IntPtr himl, int index, int canvasW, int canvasH)
         {
-            int i = s.IndexOf('\0');
-            return i >= 0 ? s.Substring(0, i) : s;
+            if (himl == IntPtr.Zero || index < 0)
+                return null;
+
+            IntPtr hIcon = ImageList_GetIcon(himl, index, ILD_NORMAL);
+            if (hIcon == IntPtr.Zero)
+                return null;
+
+            try
+            { return IconToCanvas(hIcon, canvasW, canvasH); }
+            finally { DestroyIcon(hIcon); }
+        }
+
+        private static Image IconToCanvas(IntPtr hIcon, int canvasW, int canvasH)
+        {
+            Size nat = GetIconNativeSize(hIcon);
+            float scale = Math.Min(1f, Math.Min((float)canvasW / nat.Width, (float)canvasH / nat.Height));
+            int drawW = Math.Max(1, (int)Math.Round(nat.Width * scale));
+            int drawH = Math.Max(1, (int)Math.Round(nat.Height * scale));
+            int offX = (canvasW - drawW) / 2;
+            int offY = (canvasH - drawH) / 2;
+
+            using (Icon ico = Icon.FromHandle(hIcon))
+            {
+                Bitmap bmp = new Bitmap(canvasW, canvasH, PixelFormat.Format32bppArgb);
+                using (Graphics g = Graphics.FromImage(bmp))
+                {
+                    g.Clear(Color.Transparent);
+                    g.InterpolationMode = (scale < 1f)
+                        ? System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic
+                        : System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                    g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    g.DrawIcon(ico, new Rectangle(offX, offY, drawW, drawH));
+                }
+                return bmp;
+            }
+        }
+
+        private static Size GetIconNativeSize(IntPtr hIcon)
+        {
+            if (!GetIconInfo(hIcon, out var ii))
+                return new Size(16, 16);
+            try
+            {
+                IntPtr hbmp = ii.hbmColor != IntPtr.Zero ? ii.hbmColor : ii.hbmMask;
+                if (hbmp == IntPtr.Zero)
+                    return new Size(16, 16);
+
+                if (GetObject(hbmp, Marshal.SizeOf<BITMAP>(), out var bmp) == 0)
+                    return new Size(16, 16);
+
+                int w = Math.Max(1, bmp.bmWidth);
+                int h = Math.Max(1, Math.Abs(bmp.bmHeight));
+                if (ii.hbmColor == IntPtr.Zero && (h % 2) == 0)
+                    h /= 2; // mask quirk
+                return new Size(w, h);
+            }
+            finally
+            {
+                if (ii.hbmColor != IntPtr.Zero)
+                    DeleteObject(ii.hbmColor);
+                if (ii.hbmMask != IntPtr.Zero)
+                    DeleteObject(ii.hbmMask);
+            }
+        }
+
+        private static Bitmap FitIntoCanvasNoUpscale(Image src, int canvasW, int canvasH, Color back)
+        {
+            int srcW = Math.Max(1, src.Width);
+            int srcH = Math.Max(1, src.Height);
+
+            float scale = Math.Min(1f, Math.Min((float)canvasW / srcW, (float)canvasH / srcH));
+            int drawW = Math.Max(1, (int)Math.Round(srcW * scale));
+            int drawH = Math.Max(1, (int)Math.Round(srcH * scale));
+            int offX = (canvasW - drawW) / 2;
+            int offY = (canvasH - drawH) / 2;
+
+            Bitmap outBmp = new Bitmap(canvasW, canvasH, PixelFormat.Format32bppArgb);
+            using (Graphics g = Graphics.FromImage(outBmp))
+            {
+                g.Clear(back);
+                g.InterpolationMode = (scale < 1f)
+                    ? System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic
+                    : System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                g.DrawImage(src, new Rectangle(offX, offY, drawW, drawH));
+            }
+            return outBmp;
+        }
+
+        // ---- Owner process resolution (from dwData) ----
+        private static bool TryGetOwnerHwndFromDwData(IntPtr hProc, IntPtr dwData, out IntPtr hWnd)
+        {
+            hWnd = IntPtr.Zero;
+            if (dwData == IntPtr.Zero)
+                return false;
+
+            IntPtr local = Marshal.AllocHGlobal(IntPtr.Size * 4);
+            try
+            {
+                if (!ReadProcessMemory(hProc, dwData, local, (IntPtr)(IntPtr.Size * 4), out _))
+                    return false;
+
+                hWnd = Marshal.ReadIntPtr(local, 0);
+                return hWnd != IntPtr.Zero && IsWindow(hWnd);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(local);
+            }
+        }
+
+        private static string? GetProcessPath(uint pid)
+        {
+            IntPtr h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            if (h == IntPtr.Zero)
+                return null;
+            try
+            {
+                var sb = new StringBuilder(512);
+                int len = sb.Capacity;
+                if (QueryFullProcessImageName(h, 0, sb, ref len))
+                    return sb.ToString();
+                return null;
+            }
+            finally
+            {
+                CloseHandle(h);
+            }
+        }
+
+        // ---- EXE icon extraction ----
+        private static Image? GetExeIconCanvas(string exePath, int canvasW, int canvasH)
+        {
+            IntPtr hLarge, hSmall;
+            if (ExtractIconEx(exePath, 0, out hLarge, out hSmall, 1) == 0)
+                return null;
+
+            try
+            {
+                IntPtr hIcon = hLarge != IntPtr.Zero ? hLarge : hSmall;
+                if (hIcon == IntPtr.Zero)
+                    return null;
+                return IconToCanvas(hIcon, canvasW, canvasH);
+            }
+            finally
+            {
+                if (hLarge != IntPtr.Zero)
+                    DestroyIcon(hLarge);
+                if (hSmall != IntPtr.Zero)
+                    DestroyIcon(hSmall);
+            }
         }
     }
 }

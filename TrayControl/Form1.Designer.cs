@@ -32,11 +32,12 @@
             HideBtn = new Button();
             ShowBtn = new Button();
             IconsList = new ListView();
+            RefreshBtn = new Button();
             SuspendLayout();
             // 
             // BtnList
             // 
-            BtnList.Location = new Point(35, 37);
+            BtnList.Location = new Point(12, 37);
             BtnList.Name = "BtnList";
             BtnList.Size = new Size(131, 40);
             BtnList.TabIndex = 0;
@@ -46,41 +47,56 @@
             // 
             // HideBtn
             // 
-            HideBtn.Location = new Point(35, 97);
+            HideBtn.Location = new Point(12, 96);
             HideBtn.Name = "HideBtn";
             HideBtn.Size = new Size(131, 40);
             HideBtn.TabIndex = 2;
             HideBtn.Text = "Hide";
             HideBtn.UseVisualStyleBackColor = true;
+            HideBtn.Click += HideBtn_Click;
             // 
             // ShowBtn
             // 
-            ShowBtn.Location = new Point(35, 160);
+            ShowBtn.Location = new Point(12, 155);
             ShowBtn.Name = "ShowBtn";
             ShowBtn.Size = new Size(131, 40);
             ShowBtn.TabIndex = 4;
             ShowBtn.Text = "Show";
             ShowBtn.UseVisualStyleBackColor = true;
+            ShowBtn.Click += ShowBtn_Click;
             // 
             // IconsList
             // 
-            IconsList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            IconsList.Location = new Point(224, 37);
+            IconsList.Dock = DockStyle.Right;
+            IconsList.Location = new Point(184, 0);
             IconsList.Name = "IconsList";
-            IconsList.Size = new Size(1464, 939);
+            IconsList.Size = new Size(960, 531);
             IconsList.TabIndex = 5;
             IconsList.UseCompatibleStateImageBehavior = false;
             // 
+            // RefreshBtn
+            // 
+            RefreshBtn.Location = new Point(12, 214);
+            RefreshBtn.Name = "RefreshBtn";
+            RefreshBtn.Size = new Size(131, 40);
+            RefreshBtn.TabIndex = 6;
+            RefreshBtn.Text = "Refresh";
+            RefreshBtn.UseVisualStyleBackColor = true;
+            RefreshBtn.Click += RefreshBtn_Click;
+            // 
             // Form1
             // 
-            AutoScaleDimensions = new SizeF(12F, 30F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1729, 1011);
+            AutoScaleDimensions = new SizeF(168F, 168F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            AutoSize = true;
+            ClientSize = new Size(1144, 531);
             Controls.Add(IconsList);
+            Controls.Add(RefreshBtn);
             Controls.Add(ShowBtn);
             Controls.Add(HideBtn);
             Controls.Add(BtnList);
             Name = "Form1";
+            Load += Form1_Load;
             ResumeLayout(false);
         }
 
@@ -90,5 +106,6 @@
         private Button HideBtn;
         private Button ShowBtn;
         private ListView IconsList;
+        private Button RefreshBtn;
     }
 }
