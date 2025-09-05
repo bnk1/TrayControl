@@ -19,6 +19,8 @@ namespace TrayControl
         public Image? AppIcon { get; set; }   // program EXE icon
         public Image? TrayIcon { get; set; }  // captured tray bitmap
         public string? AppPath { get; set; }  // exe path if resolved
+        public bool IsHidden { get; set; }   // true if TBSTATE_HIDDEN was set
+
     }
 
     public static class TrayInterop
@@ -202,7 +204,9 @@ namespace TrayControl
                 return;
 
             GetWindowThreadProcessId(toolbar, out uint pidExplorer);
+
             IntPtr hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, false, pidExplorer);
+
             if (hProc == IntPtr.Zero)
                 return;
 
@@ -229,30 +233,49 @@ namespace TrayControl
                             ReadProcessMemory(hProc, remoteBtn, local, (IntPtr)btnSize, out _);
                             TBBUTTON btn = Marshal.PtrToStructure<TBBUTTON>(local);
 
+                            // Skip only separators; include hidden to allow “Show”
                             if ((btn.fsStyle & TBSTYLE_SEP) == TBSTYLE_SEP)
                                 continue;
-                            if ((btn.fsState & TBSTATE_HIDDEN) == TBSTATE_HIDDEN)
-                                continue;
+
+                            bool isHidden = (btn.fsState & TBSTATE_HIDDEN) == TBSTATE_HIDDEN;
+
 
                             string text = GetButtonTextCrossProc(toolbar, btn.idCommand, hProc);
 
                             // Resolve owner -> EXE path -> extract program icon
                             string? appPath = null;
+
                             Image? appIcon = null;
+
                             if (TryGetOwnerHwndFromDwData(hProc, btn.dwData, out var owner) && owner != IntPtr.Zero && IsWindow(owner))
                             {
                                 GetWindowThreadProcessId(owner, out uint ownerPid);
+
                                 appPath = GetProcessPath(ownerPid);
+
                                 if (!string.IsNullOrEmpty(appPath))
                                     appIcon = GetExeIconCanvas(appPath!, iconW, iconH);
                             }
 
                             // Tray bitmap via what-you-see screen capture (button INDEX)
-                            Image? trayBmp = CaptureButtonIconFromScreen(toolbar, hProc, i, iconW, iconH, Color.White);
+                            Image? trayBmp = null;
+                            
+                            if (!isHidden)
+                            {
+                                trayBmp = CaptureButtonIconFromScreen(toolbar, hProc, i, iconW, iconH, Color.White);
+                            }
+
                             if (trayBmp == null)
                             {
                                 IntPtr himl = GetToolbarImageList(toolbar);
+
                                 trayBmp = GetButtonIcon(himl, btn.iBitmap, iconW, iconH);
+                            }
+
+                            // Final fallback: if we still have no tray bitmap, use the app icon on canvas
+                            if (trayBmp == null && appIcon != null)
+                            {
+                                trayBmp = FitIntoCanvasNoUpscale(appIcon, iconW, iconH, Color.Transparent);
                             }
 
                             results.Add(new TrayIconInfo
@@ -262,7 +285,8 @@ namespace TrayControl
                                 Text = text,
                                 AppIcon = appIcon,
                                 TrayIcon = trayBmp,
-                                AppPath = appPath
+                                AppPath = appPath,
+                                IsHidden = isHidden
                             });
                         }
                         finally
@@ -539,5 +563,65 @@ namespace TrayControl
                     DestroyIcon(hSmall);
             }
         }
+
+        public static bool? IsIconHidden(int idCommand, TrayArea area)
+        {
+            IntPtr toolbar = area == TrayArea.NotificationArea ? GetLiveTrayToolbar() : GetOverflowToolbar();
+            if (toolbar == IntPtr.Zero)
+                return null;
+
+            GetWindowThreadProcessId(toolbar, out uint pidExplorer);
+            IntPtr hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_VM_OPERATION, false, pidExplorer);
+            if (hProc == IntPtr.Zero)
+                return null;
+
+            try
+            {
+                int count = (int)SendMessage(toolbar, TB_BUTTONCOUNT, IntPtr.Zero, IntPtr.Zero);
+                if (count <= 0)
+                    return null;
+
+                int btnSize = Marshal.SizeOf<TBBUTTON>();
+                IntPtr remoteBtn = VirtualAllocEx(hProc, IntPtr.Zero, (IntPtr)btnSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                if (remoteBtn == IntPtr.Zero)
+                    return null;
+
+                try
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        SendMessage(toolbar, TB_GETBUTTON, (IntPtr)i, remoteBtn);
+
+                        IntPtr local = Marshal.AllocHGlobal(btnSize);
+                        try
+                        {
+                            ReadProcessMemory(hProc, remoteBtn, local, (IntPtr)btnSize, out _);
+                            TBBUTTON btn = Marshal.PtrToStructure<TBBUTTON>(local);
+
+                            if (btn.idCommand == idCommand)
+                            {
+                                bool hidden = (btn.fsState & TBSTATE_HIDDEN) == TBSTATE_HIDDEN;
+                                return hidden;
+                            }
+                        }
+                        finally
+                        {
+                            Marshal.FreeHGlobal(local);
+                        }
+                    }
+                }
+                finally
+                {
+                    VirtualFreeEx(hProc, remoteBtn, IntPtr.Zero, MEM_RELEASE);
+                }
+            }
+            finally
+            {
+                CloseHandle(hProc);
+            }
+
+            return null; // not found
+        }
+
     }
 }
