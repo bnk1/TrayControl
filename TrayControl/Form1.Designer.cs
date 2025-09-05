@@ -88,7 +88,7 @@
             IconsList.FullRowSelect = true;
             IconsList.Location = new Point(146, 3);
             IconsList.Name = "IconsList";
-            IconsList.Size = new Size(1817, 739);
+            IconsList.Size = new Size(1940, 739);
             IconsList.TabIndex = 7;
             IconsList.UseCompatibleStateImageBehavior = false;
             IconsList.ItemChecked += IconsList_ItemChecked;
@@ -147,9 +147,8 @@
             // 
             // tableLayoutPanel1
             // 
-            tableLayoutPanel1.ColumnCount = 3;
+            tableLayoutPanel1.ColumnCount = 2;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle());
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle());
             tableLayoutPanel1.Controls.Add(IconsList, 1, 0);
             tableLayoutPanel1.Controls.Add(flowLayoutPanel1, 0, 0);

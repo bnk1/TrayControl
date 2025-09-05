@@ -78,13 +78,15 @@ namespace TrayControl
                         lvi.SubItems[2].Text = info.AppPath ?? string.Empty;  // "Path"
 
                     IconsList.Items.Add(lvi);
+
+                    AutoResizeCol();
                 }
             }
             finally
             {
                 IconsList.EndUpdate();
-                AutoResizeCol();
                 _isLoading = false;
+                AutoSizeListAndForm();
             }
         }
 
@@ -235,5 +237,55 @@ namespace TrayControl
                 }
             }
         }
+
+        private void AutoSizeListAndForm()
+        {
+            if (IconsList.View != View.Details)
+                return;
+
+            // 1) Let ListView compute column widths by content
+            IconsList.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+            // 2) Sum column widths
+            int totalCols = 0;
+            foreach (ColumnHeader ch in IconsList.Columns)
+                totalCols += ch.Width;
+
+            // Leave room for the image in column 0 (ListView's autosize ignores image width)
+            int imagePad = (IconsList.SmallImageList != null && IconsList.Columns.Count > 0) ? IconsList.SmallImageList.ImageSize.Width + 6 : 0;
+
+            // Account for vertical scrollbar if likely needed
+            int rowH = (IconsList.SmallImageList != null) ? IconsList.SmallImageList.ImageSize.Height : (IconsList.Font.Height + 6);
+            int visibleRows = Math.Max(1, IconsList.ClientSize.Height / Math.Max(1, rowH));
+            bool needsVScroll = IconsList.Items.Count > visibleRows;
+            int vScroll = needsVScroll ? SystemInformation.VerticalScrollBarWidth : 0;
+
+            // Decorations = borders, padding, etc between Width and ClientSize
+            int decorations = IconsList.Width - IconsList.ClientSize.Width;
+
+            int desiredListWidth = totalCols + imagePad + vScroll + decorations;
+
+            // 3) If we're inside a SplitContainer (common: buttons left / list right), grow the form so Panel2 fits
+            SplitContainer sc = null;
+            for (Control p = IconsList.Parent; p != null; p = p.Parent)
+                if (p is SplitContainer s)
+                { sc = s; break; }
+
+            if (sc != null)
+            {
+                int delta = desiredListWidth - sc.Panel2.ClientSize.Width;
+                if (delta > 0)
+                    this.ClientSize = new Size(this.ClientSize.Width + delta, this.ClientSize.Height);
+            }
+            else
+            {
+                // No split container: grow form so the list fits from its Left edge
+                int desiredClientWidth = IconsList.Left + desiredListWidth + IconsList.Margin.Right;
+                int delta = desiredClientWidth - this.ClientSize.Width;
+                if (delta > 0)
+                    this.ClientSize = new Size(this.ClientSize.Width + delta, this.ClientSize.Height);
+            }
+        }
+
     }
 }
