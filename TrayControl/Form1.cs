@@ -113,19 +113,16 @@ namespace TrayControl
                 LoadTrayItems();
         }
 
-        // --- tiny helpers ---
-
-        private static Image BuildAppOnlyIcon(Image appIcon, int canvasW, int canvasH)
+        // Change return type of BuildAppOnlyIcon from Image to Bitmap for improved performance (CA1859)
+        private static Bitmap BuildAppOnlyIcon(Image appIcon, int canvasW, int canvasH)
         {
             if (appIcon != null)
                 return FitIntoCanvasNoUpscale(appIcon, canvasW, canvasH, Color.Transparent);
 
             // Final fallback so there is always something visible
-            using (var sysBmp = SystemIcons.Application.ToBitmap())
-            {
-                var clone = new Bitmap(sysBmp);
-                return FitIntoCanvasNoUpscale(clone, canvasW, canvasH, Color.Transparent);
-            }
+            using var sysBmp = SystemIcons.Application.ToBitmap();
+            var clone = new Bitmap(sysBmp);
+            return FitIntoCanvasNoUpscale(clone, canvasW, canvasH, Color.Transparent);
         }
 
         private static Bitmap FitIntoCanvasNoUpscale(Image src, int canvasW, int canvasH, Color back)
@@ -209,34 +206,61 @@ namespace TrayControl
             // if null -> not found; keep both disabled (or enable both if you prefer)
         }
 
-        private void IconsList_ItemChecked(object? sender, ItemCheckedEventArgs e)
+        // Fix CS8632: Remove nullable annotation from 'object?' since '#nullable disable' is set at the top
+        private void IconsList_ItemChecked(object sender, ItemCheckedEventArgs e)
         {
+
             if (_isLoading)
+
                 return;
+
+
 
             if (e.Item?.Tag is not TrayIconInfo info)
+
                 return;
 
+
+
             bool wantHide = e.Item.Checked;
+
             bool ok       = wantHide ? TrayInterop.HideIcon(info.IdCommand, info.Area) : TrayInterop.ShowIcon(info.IdCommand, info.Area);
 
+
+
             if (ok)
+
             {
+
                 info.IsHidden = wantHide;
+
             }
+
             else
+
             {
+
                 _isLoading = true;
+
                 try
+
                 {
+
                     e.Item.Checked = !wantHide;
+
                 }
+
                 finally
+
                 {
+
                     _isLoading = false;
+
                 }
+
             }
-        }
+
+        }
 
         private void AutoSizeListAndForm()
         {
