@@ -8,6 +8,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>False</UseWPF>
     <StartupObject>TrayControl.Program</StartupObject>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>TrayControl</Title>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
