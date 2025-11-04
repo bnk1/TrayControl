@@ -41,7 +41,6 @@
             flowLayoutPanel1 = new FlowLayoutPanel();
             menuStrip1 = new MenuStrip();
             OptionsMenu = new ToolStripMenuItem();
-            TrayIcon = new ToolStripMenuItem();
             tableLayoutPanel1 = new TableLayoutPanel();
             statusStrip1 = new StatusStrip();
             flowLayoutPanel1.SuspendLayout();
@@ -133,17 +132,9 @@
             // 
             // OptionsMenu
             // 
-            OptionsMenu.DropDownItems.AddRange(new ToolStripItem[] { TrayIcon });
             OptionsMenu.Name = "OptionsMenu";
             OptionsMenu.Size = new Size(104, 34);
             OptionsMenu.Text = "Options";
-            // 
-            // TrayIcon
-            // 
-            TrayIcon.CheckOnClick = true;
-            TrayIcon.Name = "TrayIcon";
-            TrayIcon.Size = new Size(214, 40);
-            TrayIcon.Text = "Tray Icon";
             // 
             // tableLayoutPanel1
             // 
@@ -201,7 +192,6 @@
         private FlowLayoutPanel flowLayoutPanel1;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem OptionsMenu;
-        private ToolStripMenuItem TrayIcon;
         private TableLayoutPanel tableLayoutPanel1;
         private StatusStrip statusStrip1;
     }

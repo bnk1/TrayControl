@@ -10,8 +10,8 @@
     <StartupObject>TrayControl.Program</StartupObject>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>TrayControl</Title>
-    <ApplicationIcon>terminal.ico</ApplicationIcon>
-    <PackageIcon>Hopstarter-Soft-Scraps-Gear.256.png</PackageIcon>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <PackageIcon></PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -23,14 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="terminal.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="C:\Dropbox\Configs\Icons\Hopstarter-Soft-Scraps-Gear.256.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <Content Include="icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,9 +40,15 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <PropertyGroup>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
+  </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="readme.md" Pack="true" PackagePath="" />
+  </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="&quot;C:\Program Files (x86)\Install Creator\ic.exe&quot; /b install.iit" />
+    <Exec Command="rem &quot;C:\Program Files (x86)\Install Creator\ic.exe&quot; /b install.iit" />
   </Target>
 
 </Project>
