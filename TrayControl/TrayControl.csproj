@@ -10,6 +10,8 @@
     <StartupObject>TrayControl.Program</StartupObject>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>TrayControl</Title>
+    <ApplicationIcon>terminal.ico</ApplicationIcon>
+    <PackageIcon>Hopstarter-Soft-Scraps-Gear.256.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -19,6 +21,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <IsPublishable>True</IsPublishable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="terminal.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Dropbox\Configs\Icons\Hopstarter-Soft-Scraps-Gear.256.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
@@ -34,5 +47,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&quot;C:\Program Files (x86)\Install Creator\ic.exe&quot; /b install.iit" />
+  </Target>
 
 </Project>
