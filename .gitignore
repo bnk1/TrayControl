@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 /Output
 /TrayControlInstaller/TrayControlInstaller-cache
+/.vshistory
+/TrayControl/.vshistory
+/TrayControlInstaller/.vshistory
