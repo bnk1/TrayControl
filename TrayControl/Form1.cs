@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using Windows.Foundation.Metadata;
 
 namespace TrayControl
 {
@@ -15,6 +16,10 @@ namespace TrayControl
         public Form1()
         {
             InitializeComponent();
+
+            // use the VersionAttribute helper to build the window title
+            this.Text = VersionAttribute.GetAppTitleWithVersion();
+
 
             // Minimal ListView setup
             IconsList.View = View.Details;

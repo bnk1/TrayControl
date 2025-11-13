@@ -47,8 +47,5 @@
   <ItemGroup>
     <None Include="readme.md" Pack="true" PackagePath="" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="rem &quot;C:\Program Files (x86)\Install Creator\ic.exe&quot; /b install.iit" />
-  </Target>
 
 </Project>
