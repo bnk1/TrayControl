@@ -16,7 +16,9 @@
     <LoadFromTemplate>
     </LoadFromTemplate>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'DefaultBuild' " />
+  <PropertyGroup Condition=" '$(Configuration)' == 'DefaultBuild' ">
+    <OutputPath>C:\Dropbox\Configs\MyApps</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="TrayControlInstaller.aip">
       <SubType>Code</SubType>

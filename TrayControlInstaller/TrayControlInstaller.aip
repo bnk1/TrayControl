@@ -8,7 +8,7 @@
     <ROW Property="ProductCode" Value="1033:{32D4BF96-AB97-4686-AF98-5387F1D7BF6D} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="TrayControl"/>
-    <ROW Property="ProductVersion" Value="1.0.1" Options="32"/>
+    <ROW Property="ProductVersion" Value="1.0.1" Options="4"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{C0797B6D-3CC2-47BE-BF63-67FB14081130}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
@@ -30,23 +30,23 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.SideBySideGuidComponent">
     <ROW Component="APPDIR" Value="{270207D6-8DE6-4338-8918-E57C9F13B023}"/>
-    <ROW Component="Microsoft.Windows.SDK.NET.dll" Value="{411B6093-EEB9-4829-AA0B-504DF7A4A82F}"/>
+    <ROW Component="Microsoft.Windows.SDK.NET.dll" Value="{0D105E7E-DD28-4656-9FA1-C47EFE13F658}"/>
     <ROW Component="ProductInformation" Value="{23E0A40A-78E2-4343-AA73-B603D3FDD37D}"/>
-    <ROW Component="SHORTCUTDIR" Value="{9D837D14-791B-4FEB-855A-C275707B6AF1}"/>
-    <ROW Component="TrayControl.deps.json" Value="{15B289DD-DEA0-4FBC-976A-ACC942910254}"/>
-    <ROW Component="TrayControl.dll" Value="{0630E1D0-99E3-4008-816D-E33F422FEB4F}"/>
-    <ROW Component="TrayControl.exe" Value="{F737D116-FA98-4088-BE45-CD7BD4DE32F5}"/>
-    <ROW Component="WinRT.Runtime.dll" Value="{CB8F61C5-A0A1-4FDE-B9EB-68913089C55D}"/>
+    <ROW Component="SHORTCUTDIR" Value="{AD954C30-4D54-4D4F-A58E-9BB6BFC8C654}"/>
+    <ROW Component="TrayControl.deps.json" Value="{6683EF18-37D6-445C-9461-F06D20501577}"/>
+    <ROW Component="TrayControl.dll" Value="{0ACFBE4D-FE2F-46CC-A875-5BD4FB5CB299}"/>
+    <ROW Component="TrayControl.exe" Value="{AC92CB5E-E3EA-4D57-86E0-A0B65208FE5A}"/>
+    <ROW Component="WinRT.Runtime.dll" Value="{1E1E43DF-848D-4524-BA14-C563C4A7883F}"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
     <ROW Component="APPDIR" ComponentId="{270207D6-8DE6-4338-8918-E57C9F13B023}" Directory_="APPDIR" Attributes="0"/>
-    <ROW Component="Microsoft.Windows.SDK.NET.dll" ComponentId="{411B6093-EEB9-4829-AA0B-504DF7A4A82F}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.SDK.NET.dll"/>
+    <ROW Component="Microsoft.Windows.SDK.NET.dll" ComponentId="{0D105E7E-DD28-4656-9FA1-C47EFE13F658}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.SDK.NET.dll"/>
     <ROW Component="ProductInformation" ComponentId="{23E0A40A-78E2-4343-AA73-B603D3FDD37D}" Directory_="APPDIR" Attributes="4" KeyPath="Version"/>
-    <ROW Component="SHORTCUTDIR" ComponentId="{9D837D14-791B-4FEB-855A-C275707B6AF1}" Directory_="SHORTCUTDIR" Attributes="0"/>
-    <ROW Component="TrayControl.deps.json" ComponentId="{15B289DD-DEA0-4FBC-976A-ACC942910254}" Directory_="APPDIR" Attributes="0" KeyPath="TrayControl.deps.json" Type="0"/>
-    <ROW Component="TrayControl.dll" ComponentId="{0630E1D0-99E3-4008-816D-E33F422FEB4F}" Directory_="APPDIR" Attributes="0" KeyPath="TrayControl.dll"/>
-    <ROW Component="TrayControl.exe" ComponentId="{F737D116-FA98-4088-BE45-CD7BD4DE32F5}" Directory_="APPDIR" Attributes="256" KeyPath="TrayControl.exe"/>
-    <ROW Component="WinRT.Runtime.dll" ComponentId="{CB8F61C5-A0A1-4FDE-B9EB-68913089C55D}" Directory_="APPDIR" Attributes="0" KeyPath="WinRT.Runtime.dll"/>
+    <ROW Component="SHORTCUTDIR" ComponentId="{AD954C30-4D54-4D4F-A58E-9BB6BFC8C654}" Directory_="SHORTCUTDIR" Attributes="0"/>
+    <ROW Component="TrayControl.deps.json" ComponentId="{6683EF18-37D6-445C-9461-F06D20501577}" Directory_="APPDIR" Attributes="0" KeyPath="TrayControl.deps.json" Type="0"/>
+    <ROW Component="TrayControl.dll" ComponentId="{0ACFBE4D-FE2F-46CC-A875-5BD4FB5CB299}" Directory_="APPDIR" Attributes="0" KeyPath="TrayControl.dll"/>
+    <ROW Component="TrayControl.exe" ComponentId="{AC92CB5E-E3EA-4D57-86E0-A0B65208FE5A}" Directory_="APPDIR" Attributes="256" KeyPath="TrayControl.exe"/>
+    <ROW Component="WinRT.Runtime.dll" ComponentId="{1E1E43DF-848D-4524-BA14-C563C4A7883F}" Directory_="APPDIR" Attributes="0" KeyPath="WinRT.Runtime.dll"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
     <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
@@ -56,7 +56,6 @@
     <ROW File="Microsoft.Windows.SDK.NET.dll" Component_="Microsoft.Windows.SDK.NET.dll" FileName="MICROS~1.DLL|Microsoft.Windows.SDK.NET.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\Microsoft.Windows.SDK.NET.dll" SelfReg="false"/>
     <ROW File="TrayControl.deps.json" Component_="TrayControl.deps.json" FileName="TRAYCO~1.JSO|TrayControl.deps.json" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\TrayControl.deps.json" SelfReg="false"/>
     <ROW File="TrayControl.dll" Component_="TrayControl.dll" FileName="TRAYCO~1.DLL|TrayControl.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\TrayControl.dll" SelfReg="false"/>
-    <ROW File="TrayControl.dll.config" Component_="TrayControl.deps.json" FileName="TRAYCO~1.CON|TrayControl.dll.config" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\TrayControl.dll.config" SelfReg="false"/>
     <ROW File="TrayControl.exe" Component_="TrayControl.exe" FileName="TRAYCO~1.EXE|TrayControl.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\TrayControl.exe" SelfReg="false" DigSign="true"/>
     <ROW File="TrayControl.pdb" Component_="TrayControl.exe" FileName="TRAYCO~1.PDB|TrayControl.pdb" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\TrayControl.pdb" SelfReg="false"/>
     <ROW File="TrayControl.runtimeconfig.json" Component_="TrayControl.deps.json" FileName="TRAYCO~2.JSO|TrayControl.runtimeconfig.json" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\TrayControl.runtimeconfig.json" SelfReg="false"/>
@@ -137,8 +136,8 @@
     <ROW Feature_="MainFeature" Component_="TrayControl.deps.json"/>
     <ROW Feature_="MainFeature" Component_="TrayControl.dll"/>
     <ROW Feature_="MainFeature" Component_="TrayControl.exe"/>
-    <ROW Feature_="MainFeature" Component_="WinRT.Runtime.dll"/>
     <ROW Feature_="MainFeature" Component_="SHORTCUTDIR"/>
+    <ROW Feature_="MainFeature" Component_="WinRT.Runtime.dll"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="SystemFoldermsiexec.exe" SourcePath="&lt;AI_RES&gt;uninstall.ico" Index="0"/>
@@ -174,7 +173,7 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiShortsComponent">
     <ROW Shortcut="TrayControl" Directory_="SHORTCUTDIR" Name="TRAYCO~1|TrayControl" Component_="TrayControl.exe" Target="[#TrayControl.exe]" Hotkey="0" IconIndex="0" ShowCmd="1" WkDir="APPDIR"/>
-    <ROW Shortcut="UninstallProductNameProductVersion" Directory_="SHORTCUTDIR" Name="UNINST~1.0|Uninstall [|ProductName] [|ProductVersion]" Component_="TrayControl.exe" Target="[SystemFolder]msiexec.exe" Arguments="/x [ProductCode]" Hotkey="0" Icon_="SystemFoldermsiexec.exe" IconIndex="0" ShowCmd="1"/>
+    <ROW Shortcut="UninstallProductNameProductVersion" Directory_="SHORTCUTDIR" Name="UNINST~1.1|Uninstall [|ProductName] [|ProductVersion]" Component_="APPDIR" Target="[SystemFolder]msiexec.exe" Arguments="/x [ProductCode]" Hotkey="0" Icon_="SystemFoldermsiexec.exe" IconIndex="0" ShowCmd="1"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiThemeComponent">
     <ATTRIBUTE name="UsedTheme" value="classic"/>
