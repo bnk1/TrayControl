@@ -3,19 +3,33 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using System.Text.Json;
+using IOPath = System.IO.Path;
 using Windows.Foundation.Metadata;
 
 namespace TrayControl
 {
     public partial class Form1 : Form
     {
-        private bool _isLoading = false;
+        private static readonly string path1 = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
+        // --- Persistence of hidden state ---
+        private readonly string _settingsPath = IOPath.Combine(path1, "TrayControl", "settings.json");
+
+        private sealed class Settings
+        {
+            public Dictionary<string, bool> HiddenByPath { get; set; } = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        private Settings _settings          = new Settings();
+        private bool _isLoading             = false;
         private readonly ImageList _iconsIL = new ImageList();
 
         public Form1()
         {
             InitializeComponent();
+
+            LoadSettings();
 
             // use the VersionAttribute helper to build the window title
             this.Text = VersionAttribute.GetAppTitleWithVersion();
@@ -50,21 +64,22 @@ namespace TrayControl
                 IconsList.Items.Clear();
                 _iconsIL.Images.Clear();
 
-                int w = _iconsIL.ImageSize.Width;
-                int h = _iconsIL.ImageSize.Height;
+                int width = _iconsIL.ImageSize.Width;
+                int height = _iconsIL.ImageSize.Height;
 
-                var items = TrayInterop.ListTrayIcons(w, h);
+                var items = TrayInterop.ListTrayIcons(width, height);
 
                 foreach (var info in items)
                 {
                     // APP ICON ONLY (ignore TrayIcon)
-                    Image img      = BuildAppOnlyIcon(info.AppIcon, w, h);
+                    Image img      = BuildAppOnlyIcon(info.AppIcon, width, height);
                     int imageIndex = _iconsIL.Images.Count;
 
                     _iconsIL.Images.Add(img);
 
-                    // Fix: Replace erroneous usage of 'GetFileNameWithoutExtension' on 'ColumnHeader' with correct usage on 'info.AppPath'
-                    string displayName = !string.IsNullOrEmpty(info.AppPath) ? Path.GetFileNameWithoutExtension(info.AppPath) : (string.IsNullOrEmpty(info.Text) ? "(unknown)" : info.Text);
+                    string displayName = !string.IsNullOrEmpty(info.AppPath) ?
+                        Path.GetFileNameWithoutExtension(info.AppPath) :
+                        (string.IsNullOrEmpty(info.Text) ? "(unknown)" : info.Text);
 
                     var lvi = new ListViewItem(displayName)
                     {
@@ -72,7 +87,8 @@ namespace TrayControl
                         Tag = info
                     };
 
-                    lvi.Checked = info.IsHidden;
+                    bool savedHide = (!string.IsNullOrEmpty(info.AppPath) && _settings.HiddenByPath.TryGetValue(info.AppPath, out var h)) ? h : info.IsHidden;
+                    lvi.Checked = savedHide;
 
                     // Fill optional columns if you added them in the Designer
                     while (lvi.SubItems.Count < IconsList.Columns.Count)
@@ -211,61 +227,31 @@ namespace TrayControl
             // if null -> not found; keep both disabled (or enable both if you prefer)
         }
 
-        // Fix CS8632: Remove nullable annotation from 'object?' since '#nullable disable' is set at the top
         private void IconsList_ItemChecked(object sender, ItemCheckedEventArgs e)
         {
-
             if (_isLoading)
-
                 return;
-
-
-
             if (e.Item?.Tag is not TrayIconInfo info)
-
                 return;
 
-
-
-            bool wantHide = e.Item.Checked;
-
-            bool ok       = wantHide ? TrayInterop.HideIcon(info.IdCommand, info.Area) : TrayInterop.ShowIcon(info.IdCommand, info.Area);
-
-
+            bool wantHide = e.Item.Checked; // CHECKED = HIDE
+            bool ok = wantHide ? TrayInterop.HideIcon(info.IdCommand, info.Area) : TrayInterop.ShowIcon(info.IdCommand, info.Area);
 
             if (ok)
-
             {
-
                 info.IsHidden = wantHide;
-
+                if (!string.IsNullOrEmpty(info.AppPath))
+                    _settings.HiddenByPath[info.AppPath] = wantHide;
+                SaveSettings();
             }
-
             else
-
             {
-
                 _isLoading = true;
-
                 try
-
-                {
-
-                    e.Item.Checked = !wantHide;
-
-                }
-
-                finally
-
-                {
-
-                    _isLoading = false;
-
-                }
-
+                { e.Item.Checked = !wantHide; }
+                finally { _isLoading = false; }
             }
-
-        }
+        }
 
         private void AutoSizeListAndForm()
         {
@@ -316,5 +302,100 @@ namespace TrayControl
             }
         }
 
+
+        private void LoadSettings()
+        {
+            try
+            {
+                if (File.Exists(_settingsPath))
+                {
+                    var txt = File.ReadAllText(_settingsPath);
+                    _settings = JsonSerializer.Deserialize<Settings>(txt) ?? new Settings();
+                }
+                else
+                {
+                    _settings = new Settings();
+                    SaveSettings();
+                }
+            }
+            catch
+            {
+                _settings = new Settings();
+                SaveSettings();
+            }
+        }
+
+        private void SaveSettings()
+        {
+            try
+            {
+                Directory.CreateDirectory(IOPath.GetDirectoryName(_settingsPath)!);
+                var opts = new JsonSerializerOptions { WriteIndented = true };
+                File.WriteAllText(_settingsPath, JsonSerializer.Serialize(_settings, opts));
+            }
+            catch { }
+        }
+
+
+
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+        private static extern int RegisterWindowMessage(string lpString);
+
+        private static readonly int WM_TASKBARCREATED = RegisterWindowMessage("TaskbarCreated");
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (m.Msg == WM_TASKBARCREATED)
+                ScheduleApplyRules();
+        }
+
+        private void ScheduleApplyRules()
+        {
+            ApplyTimer.Stop();
+            ApplyTimer.Start();
+        }
+
+        private void ApplyVisibilityRules()
+        {
+            // Query current tray items and re-apply saved hidden/visible states by AppPath
+            int w = _iconsIL.ImageSize.Width, h = _iconsIL.ImageSize.Height;
+
+            var items = TrayInterop.ListTrayIcons(w, h);
+
+            foreach (var info in items)
+            {
+                if (string.IsNullOrEmpty(info.AppPath))
+                    continue;
+                if (!_settings.HiddenByPath.TryGetValue(info.AppPath, out bool hide))
+                    continue;
+
+                bool ok = hide ? TrayInterop.HideIcon(info.IdCommand, info.Area) : TrayInterop.ShowIcon(info.IdCommand, info.Area);
+                if (ok)
+                    info.IsHidden = hide;
+            }
+
+            LoadTrayItems();    // Refresh UI
+        }
+
+        private void ApplyTimer_Tick(object sender, EventArgs e)
+        {
+            ApplyTimer.Stop();
+            ApplyVisibilityRules();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            try 
+            { 
+                SaveSettings(); 
+            }
+            catch 
+            { 
+            }
+            // DO NOT call base.OnFormClosing(e) from an event handler
+        }
     }
 }
+
