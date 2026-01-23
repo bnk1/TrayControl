@@ -1,0 +1,15 @@
+<Project Sdk="WixToolset.Sdk/6.0.2">
+
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)'==''">Release</Configuration>
+    <AppOutput>..\TrayControl\bin\Release\net8.0-windows10.0.17763.0</AppOutput>
+    <ProductName>TrayControl</ProductName>
+    <Manufacturer>B</Manufacturer>
+    <ProductVersion>1.0.0</ProductVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <WixSource Include="Product.wxs" />
+  </ItemGroup>
+
+</Project>

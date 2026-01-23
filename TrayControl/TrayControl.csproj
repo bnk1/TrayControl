@@ -12,9 +12,9 @@
     <Title>TrayControl</Title>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <PackageIcon></PackageIcon>
-    <Version>1.0.4</Version>
-    <FileVersion>1.0.4.0</FileVersion>
-    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <Version>1.0.5</Version>
+    <FileVersion>1.0.5.0</FileVersion>
+    <AssemblyVersion>1.0.5.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,6 +30,7 @@
   </ItemGroup>
   <PropertyGroup>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,6 +40,10 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if &quot;$(ConfigurationName)&quot;==&quot;Release&quot; (&#xD;&#xA;    start &quot;&quot; explorer &quot;F:\Dropbox\Configs\MyApps&quot;&#xD;&#xA;)&#xD;&#xA;" />
+  </Target>
 
   
 </Project>

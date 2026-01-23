@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="23.2" version="23.2" Modules="simple" RootPath="." Language="en" Id="{4D2B4EAC-E9B7-4662-95E0-9593C8AE8294}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="23.2" version="23.3" Modules="simple" RootPath="." Language="en" Id="{4D2B4EAC-E9B7-4662-95E0-9593C8AE8294}">
   <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="Manufacturer" Value="BNK"/>
-    <ROW Property="ProductCode" Value="1033:{32D4BF96-AB97-4686-AF98-5387F1D7BF6D} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{4641EA97-0168-421F-B5FA-929E3D09EC28} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="TrayControl"/>
-    <ROW Property="ProductVersion" Value="1.0.1" Options="4"/>
+    <ROW Property="ProductVersion" Value="1.0.5" Options="4"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{C0797B6D-3CC2-47BE-BF63-67FB14081130}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
@@ -62,7 +62,7 @@
     <ROW File="WinRT.Runtime.dll" Component_="WinRT.Runtime.dll" FileName="WINRTR~1.DLL|WinRT.Runtime.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\TrayControl\bin\Release\net8.0-windows10.0.17763.0\WinRT.Runtime.dll" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.BuildComponent">
-    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="C:\Dropbox\Configs\MyApps" PackageFileName="TrayControlInstaller" Languages="en" InstallationType="4" UseLargeSchema="true"/>
+    <ROW BuildKey="DefaultBuild" BuildName="DefaultBuild" BuildOrder="1" BuildType="0" PackageFolder="F:\Dropbox\Configs\MyApps" PackageFileName="TrayControlInstaller_1.0.5" Languages="en" InstallationType="4" UseLargeSchema="true"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.DictionaryComponent">
     <ROW Path="&lt;AI_DICTS&gt;ui.ail"/>
