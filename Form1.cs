@@ -23,8 +23,10 @@ namespace CompactAppWinForms
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
-            MinimizeBox = true;
             ClientSize = new Size(640, 420);
+
+            // Enable DPI-based autoscaling so fonts and controls are scaled by the runtime.
+            AutoScaleMode = AutoScaleMode.Dpi;
             Font = new Font("Segoe UI", 9F);
 
             var table = new TableLayoutPanel
@@ -38,7 +40,7 @@ namespace CompactAppWinForms
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34F));
             Controls.Add(table);
 
-            // Left: ListView (compact, details view)
+            // Left: ListView (compact, virtual mode for large lists)
             appsList = new DoubleBufferedListView
             {
                 Dock = DockStyle.Fill,
@@ -47,10 +49,12 @@ namespace CompactAppWinForms
                 HeaderStyle = ColumnHeaderStyle.Nonclickable,
                 MultiSelect = false,
                 HideSelection = false,
+                VirtualMode = true,
             };
             appsList.Columns.Add("Name", 260);
             appsList.Columns.Add("Version", 90);
             appsList.Columns.Add("Publisher", 180);
+            appsList.RetrieveVirtualItem += AppsList_RetrieveVirtualItem;
             appsList.SelectedIndexChanged += AppsList_SelectedIndexChanged;
             table.Controls.Add(appsList, 0, 0);
 
@@ -90,33 +94,51 @@ namespace CompactAppWinForms
 
         void PopulateList()
         {
-            appsList.BeginUpdate();
-            appsList.Items.Clear();
-            foreach (var a in appData)
-            {
-                var li = new ListViewItem(a.Name);
-                li.SubItems.Add(a.Version);
-                li.SubItems.Add(a.Publisher);
-                li.Tag = a;
-                appsList.Items.Add(li);
-            }
-            appsList.EndUpdate();
+            appsList.VirtualListSize = appData.Count;
+        }
+
+        void AppsList_RetrieveVirtualItem(object? sender, RetrieveVirtualItemEventArgs e)
+        {
+            var a = appData[e.ItemIndex];
+            e.Item = new ListViewItem(new[] { a.Name, a.Version, a.Publisher }) { Tag = a };
         }
 
         void AppsList_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            if (appsList.SelectedItems.Count == 0)
+            if (appsList.SelectedIndices.Count == 0)
             {
                 lblName.Text = lblVersion.Text = lblPublisher.Text = "";
                 btnOpen.Enabled = btnUninstall.Enabled = false;
                 return;
             }
 
-            var ai = (AppInfo)appsList.SelectedItems[0].Tag!;
+            var index = appsList.SelectedIndices[0];
+            var ai = appData[index];
             lblName.Text = ai.Name;
             lblVersion.Text = $"Version: {ai.Version}";
             lblPublisher.Text = $"Publisher: {ai.Publisher}";
             btnOpen.Enabled = btnUninstall.Enabled = true;
+        }
+
+        // Respond to DPI changes at runtime (Per-monitor). Scale form and adjust list column widths.
+        protected override void OnDpiChanged(DpiChangedEventArgs e)
+        {
+            base.OnDpiChanged(e);
+
+            // scaleFactor is new DPI / old DPI
+            float scaleFactor = (float)e.DeviceDpiNew / e.DeviceDpiOld;
+
+            // Let WinForms scale controls (positions, sizes). This is relative scale from old->new.
+            this.Scale(new SizeF(scaleFactor, scaleFactor));
+
+            // Columns do not automatically scale, adjust widths so list layout remains proportional.
+            for (int i = 0; i < appsList.Columns.Count; i++)
+            {
+                appsList.Columns[i].Width = (int)Math.Round(appsList.Columns[i].Width * scaleFactor);
+            }
+
+            // Optional: force a redraw for crisp text
+            this.Invalidate(true);
         }
     }
 
@@ -139,7 +161,7 @@ namespace CompactAppWinForms
         public DoubleBufferedListView()
         {
             DoubleBuffered = true;
-            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+            SetStyle(System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer | System.Windows.Forms.ControlStyles.AllPaintingInWmPaint, true);
         }
     }
 }
