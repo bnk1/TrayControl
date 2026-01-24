@@ -387,14 +387,37 @@ namespace TrayControl
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            try 
-            { 
-                SaveSettings(); 
+            try
+            {
+                SaveSettings();
             }
-            catch 
-            { 
+            catch
+            {
             }
             // DO NOT call base.OnFormClosing(e) from an event handler
+        }
+
+        private void OpenSettingsFile_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!File.Exists(_settingsPath))
+                {
+                    _settings = new Settings();
+                    SaveSettings();
+                }
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = _settingsPath,
+                    UseShellExecute = true,
+                });
+            }
+            catch
+            {
+
+
+            }
         }
     }
 }
