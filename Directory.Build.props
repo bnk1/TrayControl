@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Central version shared by your app and the installer. Update this when releasing -->
+    <Version>1.2.3</Version>
+  </PropertyGroup>
+</Project>

@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 using System;
 using System.Drawing;
 using System.IO;
@@ -240,8 +240,10 @@ namespace TrayControl
             if (ok)
             {
                 info.IsHidden = wantHide;
+
                 if (!string.IsNullOrEmpty(info.AppPath))
                     _settings.HiddenByPath[info.AppPath] = wantHide;
+
                 SaveSettings();
             }
             else
@@ -314,15 +316,19 @@ namespace TrayControl
                 }
                 else
                 {
-                    _settings = new Settings();
-                    SaveSettings();
+                    NewSettings();
                 }
             }
             catch
             {
-                _settings = new Settings();
-                SaveSettings();
+                NewSettings();
             }
+        }
+
+        private void NewSettings()
+        {
+            _settings = new Settings();
+            SaveSettings();
         }
 
         private void SaveSettings()
@@ -330,7 +336,9 @@ namespace TrayControl
             try
             {
                 Directory.CreateDirectory(IOPath.GetDirectoryName(_settingsPath)!);
+
                 var opts = new JsonSerializerOptions { WriteIndented = true };
+
                 File.WriteAllText(_settingsPath, JsonSerializer.Serialize(_settings, opts));
             }
             catch { }
@@ -417,6 +425,15 @@ namespace TrayControl
             {
 
 
+            }
+        }
+
+        private void BtnSaveSettings_Click(object sender, EventArgs e)
+        {
+            if (!File.Exists(_settingsPath))
+            {
+                _settings = new Settings();
+                SaveSettings();
             }
         }
     }
