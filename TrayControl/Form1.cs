@@ -18,7 +18,8 @@ namespace TrayControl
 
         private sealed class Settings
         {
-            public Dictionary<string, bool> HiddenByPath { get; set; } = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            // Primary dictionary keyed by composite id: "<AppPath>\u001F<Text>"
+            public Dictionary<string, bool> HiddenById { get; set; } = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         }
 
         private Settings _settings          = new Settings();
@@ -53,7 +54,25 @@ namespace TrayControl
 
             // Initial load
             LoadTrayItems();
+
+            // Ensure saved hide/show rules are applied on startup after the form is shown.
+            this.Shown += Form1_Shown;
         }
+
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            // Run asynchronously after the form has shown so tray icons are available.
+            this.BeginInvoke(new Action(ApplyVisibilityRules));
+        }
+
+        // Build a stable composite id for an icon entry using AppPath and Text.
+        // We use the ASCII unit separator to avoid collisions with common characters.
+        private static string MakeId(string appPath, string text)
+        {
+            return (appPath ?? string.Empty) + '\u001F' + (text ?? string.Empty);
+        }
+
+        private static string MakeId(TrayIconInfo info) => MakeId(info.AppPath, info.Text);
 
         private void LoadTrayItems()
         {
@@ -87,7 +106,20 @@ namespace TrayControl
                         Tag = info
                     };
 
-                    bool savedHide = (!string.IsNullOrEmpty(info.AppPath) && _settings.HiddenByPath.TryGetValue(info.AppPath, out var h)) ? h : info.IsHidden;
+                    // Determine savedHide by composite id first, then fallback to current state.
+                    string id = MakeId(info);
+                    bool savedHide = (_settings.HiddenById != null && _settings.HiddenById.TryGetValue(id, out var hv)) ? hv : info.IsHidden;
+
+                    // APPLY STATE TO EXPLORER
+                    if (savedHide && !info.IsHidden)
+                    {
+                        TrayInterop.HideIcon(info.IdCommand, info.Area);
+                    }
+                    else if (!savedHide && info.IsHidden)
+                    {
+                        TrayInterop.ShowIcon(info.IdCommand, info.Area);
+                    }
+
                     lvi.Checked = savedHide;
 
                     // Fill optional columns if you added them in the Designer
@@ -241,8 +273,14 @@ namespace TrayControl
             {
                 info.IsHidden = wantHide;
 
-                if (!string.IsNullOrEmpty(info.AppPath))
-                    _settings.HiddenByPath[info.AppPath] = wantHide;
+                // Save by composite id so identical app paths with different texts are distinct
+                string id = MakeId(info);
+
+                // If the desired state is 'hide', store it. Otherwise remove the entry to keep settings minimal.
+                if (wantHide)
+                    _settings.HiddenById[id] = true;
+                else
+                    _settings.HiddenById.Remove(id);
 
                 SaveSettings();
             }
@@ -318,6 +356,9 @@ namespace TrayControl
                 {
                     NewSettings();
                 }
+
+                // Ensure dictionaries are initialized (in case older file omitted new property)
+                _settings.HiddenById ??= new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             }
             catch
             {
@@ -346,6 +387,7 @@ namespace TrayControl
 
 
 
+
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
         private static extern int RegisterWindowMessage(string lpString);
 
@@ -367,16 +409,19 @@ namespace TrayControl
 
         private void ApplyVisibilityRules()
         {
-            // Query current tray items and re-apply saved hidden/visible states by AppPath
+            // Query current tray items and re-apply saved hidden/visible states by composite id
             int w = _iconsIL.ImageSize.Width, h = _iconsIL.ImageSize.Height;
 
             var items = TrayInterop.ListTrayIcons(w, h);
 
             foreach (var info in items)
             {
-                if (string.IsNullOrEmpty(info.AppPath))
+                if (string.IsNullOrEmpty(info.AppPath) && string.IsNullOrEmpty(info.Text))
                     continue;
-                if (!_settings.HiddenByPath.TryGetValue(info.AppPath, out bool hide))
+
+                string id = MakeId(info);
+
+                if (!_settings.HiddenById.TryGetValue(id, out var hide))
                     continue;
 
                 bool ok = hide ? TrayInterop.HideIcon(info.IdCommand, info.Area) : TrayInterop.ShowIcon(info.IdCommand, info.Area);
