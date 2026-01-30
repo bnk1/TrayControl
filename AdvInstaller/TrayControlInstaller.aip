@@ -5,10 +5,10 @@
     <ROW Property="ALLUSERS" Value="1"/>
     <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
     <ROW Property="Manufacturer" Value="BNK"/>
-    <ROW Property="ProductCode" Value="1033:{6535ABF7-BD45-4605-9995-16CEAE36ECB3} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{F00EFB69-C2BA-4234-9C33-EF83C7782085} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
     <ROW Property="ProductName" Value="TrayControl"/>
-    <ROW Property="ProductVersion" Value="1.0.6" Options="4"/>
+    <ROW Property="ProductVersion" Value="1.0.7" Options="4"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
     <ROW Property="UpgradeCode" Value="{C0797B6D-3CC2-47BE-BF63-67FB14081130}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
