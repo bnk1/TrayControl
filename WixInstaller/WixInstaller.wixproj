@@ -2,28 +2,27 @@
   <ItemGroup>
     <ProjectReference Include="..\TrayControl\TrayControl.csproj" />
   </ItemGroup>
-
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <EnableDefaultHeatTargets>true</EnableDefaultHeatTargets>
-  </PropertyGroup>
 
+    <!-- Set the folder where the MSI and any generated .cab are written -->
+    <OutputPath>F:\Dropbox\Configs\MyApps\</OutputPath>
+    <!-- OutDir is often honored by SDK-style builds/CI; set it too to be explicit -->
+    <OutDir>F:\Dropbox\Configs\MyApps\</OutDir>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
   </ItemGroup>
-
   <!-- Compute product version from the application csproj <Version>, normalize to WiX expectations -->
   <Target Name="ComputeProductVersion" BeforeTargets="BeforeBuild">
-    <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\..\TrayControl\TrayControl.csproj"
-             Query="/*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']/text()">
+    <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\..\TrayControl\TrayControl.csproj" Query="/*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']/text()">
       <Output TaskParameter="Result" PropertyName="ProductVersionFromCsproj" />
     </XmlPeek>
-
     <PropertyGroup>
       <!-- Normalize a three-part numeric version (e.g. 1.0.9) to four-part (1.0.9.0).
            Leave four-part or semantic versions (e.g. 1.2.3.4 or 1.2.3-beta.1) unchanged. -->
       <ProductVersionNormalized>$([System.Text.RegularExpressions.Regex]::Replace('$(ProductVersionFromCsproj)', '^(\d+\.\d+\.\d+)$', '$1.0'))</ProductVersionNormalized>
-
       <!-- Export to WiX preprocessor and set MSI name -->
       <DefineConstants>ProductVersion=$(ProductVersionNormalized)</DefineConstants>
       <OutputName>TrayControl-$(ProductVersionNormalized)</OutputName>
