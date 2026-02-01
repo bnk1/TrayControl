@@ -9,7 +9,7 @@
       DowngradeErrorMessage="A newer version of TrayControl is already installed." />
     <MediaTemplate />
     <Feature Id="MainFeature" Title="TrayControl" Level="1">
-      <ComponentRef Id="MainFiles" />
+      <ComponentGroupRef Id="MainFiles" />
     </Feature>
   </Package>
 </Wix>

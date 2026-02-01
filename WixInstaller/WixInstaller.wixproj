@@ -15,7 +15,7 @@
   <!-- Compute product version from the application csproj <Version>, normalize to WiX expectations -->
   <Target Name="ComputeProductVersion" BeforeTargets="BeforeBuild">
     <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\..\TrayControl\TrayControl.csproj"
-             Query="/*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']">
+             Query="/*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']/text()">
       <Output TaskParameter="Result" PropertyName="ProductVersionFromCsproj" />
     </XmlPeek>
 
