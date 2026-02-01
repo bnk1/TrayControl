@@ -5,11 +5,10 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <EnableDefaultHeatTargets>true</EnableDefaultHeatTargets>
-
-    <!-- Set the folder where the MSI and any generated .cab are written -->
-    <OutputPath>F:\Dropbox\Configs\MyApps\</OutputPath>
-    <!-- OutDir is often honored by SDK-style builds/CI; set it too to be explicit -->
-    <OutDir>F:\Dropbox\Configs\MyApps\</OutDir>
+    <SuppressAssemblyResolution>true</SuppressAssemblyResolution>
+    <SuppressLocalization>true</SuppressLocalization>
+    <OutputPath>F:\Dropbox\Configs\MyApps\</OutputPath>     <!-- Set the folder where the MSI and any generated .cab are written -->
+    <OutDir>F:\Dropbox\Configs\MyApps\</OutDir>             <!-- OutDir is often honored by SDK-style builds/CI; set it too to be explicit -->
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
