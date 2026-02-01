@@ -5,23 +5,28 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <EnableDefaultHeatTargets>true</EnableDefaultHeatTargets>
-    <OutputPath>F:\Dropbox\Configs\MyApps\</OutputPath>     <!-- Set the folder where the MSI and any generated .cab are written -->
-    <OutDir>F:\Dropbox\Configs\MyApps\</OutDir>             <!-- OutDir is often honored by SDK-style builds/CI; set it too to be explicit -->
+    <OutputPath>F:\Dropbox\Configs\MyApps\</OutputPath>
+    <OutDir>F:\Dropbox\Configs\MyApps\</OutDir>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
   </ItemGroup>
-  <!-- Compute product version from the application csproj <Version>, normalize to WiX expectations -->
-  <Target Name="ComputeProductVersion" BeforeTargets="BeforeBuild">
-    <XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\..\TrayControl\TrayControl.csproj" Query="/*[local-name()='Project']/*[local-name()='PropertyGroup']/*[local-name()='Version']/text()">
-      <Output TaskParameter="Result" PropertyName="ProductVersionFromCsproj" />
-    </XmlPeek>
-    <PropertyGroup>
-      <!-- Normalize a three-part numeric version (e.g. 1.0.9) to four-part (1.0.9.0). Leave four-part or semantic versions (e.g. 1.2.3.4 or 1.2.3-beta.1) unchanged. -->
-      <ProductVersionNormalized>$([System.Text.RegularExpressions.Regex]::Replace('$(ProductVersionFromCsproj)', '^(\d+\.\d+\.\d+)$', '$1.0'))</ProductVersionNormalized>
-      <!-- Export to WiX preprocessor and set MSI name -->
-      <DefineConstants>ProductVersion=$(ProductVersionNormalized)</DefineConstants>
-      <OutputName>TrayControl-$(ProductVersionNormalized)</OutputName>
-    </PropertyGroup>
-  </Target>
+
+  <!-- Evaluate the app csproj at project-evaluation time so WiX targets can see the version -->
+  <PropertyGroup>
+    <!-- Read the csproj file & extract the first <Version>...</Version> value -->
+    <ProductVersionFromCsproj>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\..\TrayControl\TrayControl.csproj')),'<Version>([^&lt;]+)</Version>').Groups[1].Value)</ProductVersionFromCsproj>
+
+    <!-- Normalize 3-part versions to 4-part (1.2.3 -> 1.2.3.0) -->
+    <ProductVersionNormalized>$([System.Text.RegularExpressions.Regex]::Replace('$(ProductVersionFromCsproj)', '^(\d+\.\d+\.\d+)$', '$1.0'))</ProductVersionNormalized>
+
+    <!-- Make the WiX preprocessor variable available and set the MSI filename -->
+    <DefineConstants>ProductVersion=$(ProductVersionNormalized)</DefineConstants>
+    <OutputName>TrayControl-$(ProductVersionNormalized)</OutputName>
+  </PropertyGroup>
+
+  <!-- (Removed the BeforeBuild target + post-build rename target. With the evaluation-time property above,
+       WiX emits the MSI named TrayControl-<version>.msi directly, and we avoid renaming other MSIs in the output folder.) -->
+
 </Project>
