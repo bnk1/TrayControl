@@ -7,6 +7,7 @@
     Version="$(var.ProductVersion)"
     UpgradeCode="{FB4B7980-0702-4117-9B80-7FEAD6ABD78C}">
     <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+    <MediaTemplate EmbedCab="yes" />
     <Feature Id="MainFeature" Title="TrayControl" Level="1">
       <ComponentGroupRef Id="MainFiles" />
     </Feature>
