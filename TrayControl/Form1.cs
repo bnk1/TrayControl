@@ -52,6 +52,30 @@ namespace TrayControl
             HideBtn.Click += HideBtn_Click;
             RefreshBtn.Click += (s, e) => LoadTrayItems();
 
+            // Create and wire the Clear All button next to RefreshBtn (keeps designer untouched)
+            try
+            {
+                if (RefreshBtn?.Parent != null)
+                {
+                    ClearAllBtn = new Button
+                    {
+                        Text = "Clear All",
+                        AutoSize = false,
+                        Width = Math.Max(80, RefreshBtn.Width),
+                        Height = RefreshBtn.Height,
+                        Anchor = RefreshBtn.Anchor
+                    };
+                    // Position to the right of RefreshBtn with a small gap
+                    ClearAllBtn.Location = new Point(RefreshBtn.Left + RefreshBtn.Width + 8, RefreshBtn.Top);
+                    ClearAllBtn.Click += ClearAllBtn_Click;
+                    RefreshBtn.Parent.Controls.Add(ClearAllBtn);
+                }
+            }
+            catch
+            {
+                // Non-fatal: if layout assumptions fail, skip adding the button.
+            }
+
             // Initial load
             LoadTrayItems();
 
@@ -63,6 +87,42 @@ namespace TrayControl
         {
             // Run asynchronously after the form has shown so tray icons are available.
             this.BeginInvoke(new Action(ApplyVisibilityRules));
+        }
+
+        // Clear All handler: confirm, show all icons, clear stored hidden rules and save.
+        private void ClearAllBtn_Click(object sender, EventArgs e)
+        {
+            var dr = MessageBox.Show(this,
+                "Clear all saved hide rules and show all tray icons?",
+                "Confirm Clear All",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2);
+
+            if (dr != DialogResult.Yes)
+                return;
+
+            try
+            {
+                int w = _iconsIL.ImageSize.Width, h = _iconsIL.ImageSize.Height;
+                var items = TrayInterop.ListTrayIcons(w, h);
+
+                foreach (var info in items)
+                {
+                    // best-effort: show every tray icon found
+                    try { TrayInterop.ShowIcon(info.IdCommand, info.Area); } catch { }
+                }
+
+                _settings.HiddenById.Clear();
+                SaveSettings();
+
+                // Refresh list and UI state
+                LoadTrayItems();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Failed to clear saved rules: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // Build a stable composite id for an icon entry using AppPath and Text.
@@ -384,7 +444,6 @@ namespace TrayControl
             }
             catch { }
         }
-
 
 
 

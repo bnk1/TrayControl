@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="TrayControl"
+    Manufacturer="BNK"
+    Version="$(var.ProductVersion)"
+    UpgradeCode="{FB4B7980-0702-4117-9B80-7FEAD6ABD78C}">
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of TrayControl is already installed." />
+    <MediaTemplate />
+    <Feature Id="MainFeature" Title="TrayControl" Level="1">
+      <ComponentRef Id="MainFiles" />
+    </Feature>
+  </Package>
+</Wix>

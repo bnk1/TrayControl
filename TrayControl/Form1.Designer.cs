@@ -41,6 +41,7 @@ namespace TrayControl
             flowLayoutPanel1 = new FlowLayoutPanel();
             OpenSettingsFile = new Button();
             BtnSaveSettings = new Button();
+            ClearAllBtn = new Button();
             statusStrip1 = new StatusStrip();
             ApplyTimer = new System.Windows.Forms.Timer(components);
             tableLayoutPanel1 = new TableLayoutPanel();
@@ -115,6 +116,7 @@ namespace TrayControl
             flowLayoutPanel1.Controls.Add(ShowBtn);
             flowLayoutPanel1.Controls.Add(OpenSettingsFile);
             flowLayoutPanel1.Controls.Add(BtnSaveSettings);
+            flowLayoutPanel1.Controls.Add(ClearAllBtn);
             flowLayoutPanel1.Dock = DockStyle.Fill;
             flowLayoutPanel1.FlowDirection = FlowDirection.TopDown;
             flowLayoutPanel1.Location = new Point(3, 3);
@@ -141,6 +143,16 @@ namespace TrayControl
             BtnSaveSettings.Text = "Save";
             BtnSaveSettings.UseVisualStyleBackColor = true;
             BtnSaveSettings.Click += BtnSaveSettings_Click;
+            // 
+            // ClearAllBtn
+            // 
+            ClearAllBtn.Location = new Point(3, 233);
+            ClearAllBtn.Name = "ClearAllBtn";
+            ClearAllBtn.Size = new Size(131, 40);
+            ClearAllBtn.TabIndex = 9;
+            ClearAllBtn.Text = "Clear all";
+            ClearAllBtn.UseVisualStyleBackColor = true;
+            ClearAllBtn.Click += ClearAllBtn_Click;
             // 
             // statusStrip1
             // 
@@ -204,5 +216,6 @@ namespace TrayControl
         private Button OpenSettingsFile;
         private TableLayoutPanel tableLayoutPanel1;
         private Button BtnSaveSettings;
+        private Button ClearAllBtn;
     }
 }

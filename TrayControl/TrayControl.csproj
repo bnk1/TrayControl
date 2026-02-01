@@ -12,9 +12,9 @@
     <Title>TrayControl</Title>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <PackageIcon></PackageIcon>
-    <Version>1.0.7</Version>
+    <Version>1.0.9</Version>
     <FileVersion></FileVersion>
-    <AssemblyVersion>1.0.7.0</AssemblyVersion>
+    <AssemblyVersion></AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -41,9 +41,4 @@
     <Folder Include="Properties\" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if &quot;$(ConfigurationName)&quot;==&quot;Release&quot; (&#xD;&#xA;    start &quot;&quot; explorer &quot;F:\Dropbox\Configs\MyApps&quot;&#xD;&#xA;)&#xD;&#xA;" />
-  </Target>
-
-  
 </Project>
